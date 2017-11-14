@@ -1,5 +1,9 @@
 from numpy import *
 import operator
+import matplotlib
+from os import listdir
+import matplotlib.pyplot as plt
+
 
 def createDataSet():
     group = array([[1.0,110],[1.0,100],[1,120],[0,105]])
@@ -22,12 +26,12 @@ def classify0(inX,dataSet,labels,k):
 
 def file2matrix(filename):
     fr = open(filename)
-    numberOfLines=len(fr.readlines())
+    arrayLines = fr.readlines()
+    numberOfLines=len(arrayLines)
     returnMat=zeros((numberOfLines,3))
     classLabelVector=[]
-    fr=open(filename)
     index=0
-    for line in fr.readlines():
+    for line in arrayLines:
         line=line.strip()
         listFromLine=line.split('\t')
         returnMat[index,:]=listFromLine[0:3]
@@ -50,7 +54,7 @@ def autoNorm(dataSet):
 
 def datingClassTest():
     h0Ratio = 0.50
-    DatingDataMat,datingLabels = file2matrix('')
+    DatingDataMat,datingLabels = file2matrix('datingTestSet2.txt')
     normMat,ranges,minVal = autoNorm(DatingDataMat)
     m=normMat.shape[0]
     numTestVecs=int(m*h0Ratio)
@@ -61,14 +65,60 @@ def datingClassTest():
             errorCount +=1
     return errorCount
 
+def drawplot():
+    DatingDataMat,datingLabels = file2matrix('datingTestSet2.txt')
+    fig = plt.figure()
+    ax = fig.add_subplot(111)
+    ax.scatter(DatingDataMat[:,1],DatingDataMat[:,2],15.0*array(datingLabels),15.0*array(datingLabels))
+    plt.show()
+
+def img2vector(filename):
+    returnVect=zeros((1,1024))
+    fr = open(filename)
+    for i in range(32):
+        linestr=fr.readline()
+        for j in range(32):
+            returnVect[0,32*i+j] = int(linestr[j])
+    return returnVect
+
+def handwritingClassTest():
+    hwLabels =[]
+    trainnigFileList = listdir('trainingDigits')
+    m = len(trainnigFileList)
+    trainingMat = zeros((m,1024))
+    for i in range(m):
+        fileNameStr = trainnigFileList[i]
+        fileStr= fileNameStr.split('.')[0]
+        classNumStr=int((fileStr.split('_'))[0])
+        hwLabels.append(classNumStr)
+        trainingMat[i,:]=img2vector('trainingDigits/%s' % fileNameStr)
+    testFileList=listdir('testDigits')
+    errorCount = 0.0
+    mTest = len(testFileList)
+    for i in range(mTest):
+        fileNameStr=testFileList[i]
+        fileStr=fileNameStr.split('.')[0]
+        classNumStr=int(fileStr.split('_')[0])
+        vectorUnderTest=img2vector('testDigits/%s' % fileNameStr)
+        classifierResult = classify0(vectorUnderTest,trainingMat,hwLabels,3)
+        if(classifierResult != classNumStr):
+            errorCount += 1
+    print '\n the total number of errors is : %d' %errorCount
+    print '\n the total error rate is:%f' % (errorCount/float(mTest))
+
+
+
 
 def main():
-    group,labels=createDataSet()
-    inX=[0,0]
-    autoData,range,minValue=autoNorm(group)
-    result=classify0(inX,autoData,labels,3)
-    print(result)
-    print(autoData)
+   # group,labels=createDataSet()
+    #inX=[0,0]
+    #autoData,range,minValue=autoNorm(group)
+    #result=classify0(inX,autoData,labels,3)
+    #print(result)
+    #print(autoData)
+   #datingClassTest()
+   #drawplot()
+   handwritingClassTest()
 
 main()
 
